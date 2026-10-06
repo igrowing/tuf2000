@@ -58,6 +58,8 @@ Readings resume on the next poll after the cable is reconnected.
 
 `read()` blocks the calling task, so use it only in bench sketches. Real firmware should use `readAsync()`/`takeReading()`: [examples/async](examples/async/async.ino) shows that polling next to other work in `loop()`, with `responseReady()`, an optional log callback (`setLogger()`), a failure counter and stale-data detection.
 
+> Try out asyncronous non-blocking reading. See async.ino in examples. It's couple of lines more but it guarantees the MCU will not drop WiFi communicatin and will not reboot itself using this lib.
+
 ### Behaviour worth knowing
 
 - A poll is **all or nothing**: a Modbus error, a wrong-length reply, a NaN/infinity value or an implausible totalizer jump makes the whole `Reading` invalid (`valid == false`, with the reason in `failure`). Nothing is clamped or defaulted.
@@ -139,4 +141,4 @@ RS-485/Modbus is multi-drop: a shut-off valve controller or any other Modbus RTU
 
 ### Shut-off valve strategy
 
-Prefer the TUF-2000M's own relay, configured locally (flow-rate or totalizer threshold), as the failsafe that closes a master shut-off valve even when the ESP32 or Wi-Fi is down: don't trust the network for safety-critical shut-off. Poll flow readings over Modbus in firmware as well, for reporting/logging and for application-aware logic the meter alone can't know (e.g. unusually high volume mid-cycle for whichever zone is currently running).
+Prefer the TUF-2000's own relay, configured locally (flow-rate or totalizer threshold), as the failsafe that closes a master shut-off valve even when the ESP32 or Wi-Fi is down: don't trust the network for safety-critical shut-off. Poll flow readings over Modbus in firmware as well, for reporting/logging and for application-aware logic the meter alone can't know (e.g. unusually high volume mid-cycle for whichever zone is currently running).

@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example: [basic, async]
+        example: [basic, async, bus_scan, register_dump, diagnose, rs485_de_pin]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

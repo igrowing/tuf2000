@@ -1,4 +1,4 @@
-// Polls a TUF-2000M over RS-485 and prints each reading. Pins below are an example wiring for a
+// Polls a TUF-2000 over RS-485 and prints each reading. Pins below are an example wiring for a
 // generic ESP32 dev board - change them to match yours.
 #include <Tuf2000.h>
 

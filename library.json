@@ -1,8 +1,8 @@
 {
   "name": "tuf2000",
   "version": "0.1.0",
-  "description": "Non-blocking Modbus RTU driver for the TUF-2000M ultrasonic clamp-on flow meter on ESP32 (eModbus), with validated replies and a host-testable protocol layer.",
-  "keywords": "tuf2000, tuf-2000m, flow meter, ultrasonic, modbus, rs485, esp32, emodbus",
+  "description": "Non-blocking Modbus RTU driver for the TUF-2000 ultrasonic clamp-on flow meter on ESP32 (eModbus), with validated replies and a host-testable protocol layer.",
+  "keywords": "tuf2000, tuf-2000, flow meter, ultrasonic, modbus, rs485, esp32, emodbus",
   "repository": {
     "type": "git",
     "url": "https://github.com/igrowing/tuf2000.git"

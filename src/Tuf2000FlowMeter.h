@@ -14,7 +14,7 @@
 
 namespace tuf2000 {
 
-// Modbus RTU driver for the TUF-2000M ultrasonic clamp-on flow meter. Named after the specific
+// Modbus RTU driver for the TUF-2000 ultrasonic clamp-on flow meter. Named after the specific
 // meter model (not a generic flow meter) because the register map/decode logic is
 // TUF-2000-specific.
 //
@@ -44,7 +44,7 @@ public:
         uint32_t baudRate = 9600;
         uint8_t slaveId = 1;
         // Register map (function code 03, protocol addresses = the manual's register number minus
-        // one). Defaults match the TUF-2000M manual: flow rate REG1-2, fluid sound speed REG7-8,
+        // one). Defaults match the TUF-2000 manual: flow rate REG1-2, fluid sound speed REG7-8,
         // signal block REG92-94, positive totalizer (REAL4, m3) REG115-116.
         // flowRateRegister/totalizerRegister/soundSpeedRegister each span 2 words
         // (REAL4, low word first - see decodeFloatLowWordFirst()).
