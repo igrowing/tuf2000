@@ -60,6 +60,8 @@ Readings resume on the next poll after the cable is reconnected.
 
 > Try out asyncronous non-blocking reading. See async.ino in examples. It's couple of lines more but it guarantees the MCU will not drop WiFi communicatin and will not reboot itself using this lib.
 
+> Generally in MCUs it's better to use asynchronous calls. On one hand it is harder to debug and harder to understand the code. On the other hand, it adds robustness and leverages the capabilities of your MCU. Make your game!
+
 ### Behaviour worth knowing
 
 - A poll is **all or nothing**: a Modbus error, a wrong-length reply, a NaN/infinity value or an implausible totalizer jump makes the whole `Reading` invalid (`valid == false`, with the reason in `failure`). Nothing is clamped or defaulted.
