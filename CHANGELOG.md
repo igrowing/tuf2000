@@ -4,9 +4,7 @@ All notable changes to this library are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
-
-## [0.1.0] - TBD
+## [0.1.0] - Initial release
 
 ### Added
 - `Tuf2000FlowMeter`: non-blocking eModbus RTU driver for the TUF-2000 (flow rate, positive
@@ -16,4 +14,4 @@ All notable changes to this library are documented here. The format follows
 - Optional `setLogger()` callback.
 - `Tuf2000Protocol`: host-testable low-word-first REAL4 decoding, reply-length validation,
   totalizer jump guard and poll tracker with stale-reply detection.
-- Native Unity tests and a basic example.
+- Native Unity tests and examples.

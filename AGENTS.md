@@ -58,7 +58,7 @@ platformio.ini       dev/CI environments only - consumers never see it
 * **Don't repeat yourself:** before adding a function, look for an existing one to reuse or extend.
   Widen an existing function if it has only 1-2 callers; otherwise add a broader one and have the
   narrow one delegate to it.
-* **Formatting:** run `clang-format` (LLVM-based, ~100 columns) on modified files.
+* **Formatting:** run `clang-format -i --style=file` (the repo `.clang-format`, ~100 columns) on modified files. `pio test -e native` fails if any file under `src/`, `examples/` or `test/` is not formatted (needs `pip install clang-format`).
 * **Static analysis:** `pio check` must introduce no new warnings.
 * **Generated artifacts:** never edit anything under `.pio/`.
 
@@ -104,8 +104,8 @@ install its tools.
   includes, no project-specific names or pin numbers.
 
 ### Step 4: Verify
-1. `pio test -e native` - all pass.
-2. `pio check -e esp32dev` - no new warnings.
+1. `pio test -e native` - format check and all tests pass.
+2. `pio check -e esp32dev` - no new warnings in `src/` (findings inside eModbus itself are not ours). If `pio` is not on PATH, call `%USERPROFILE%\.platformio\penv\Scripts\pio.exe`.
 3. Compile `examples/basic` for the ESP32 environment on the pioarduino platform; no new warnings
    from this library's own code.
 4. If `library.json` changed: `pio pkg pack` and inspect the tarball contents.

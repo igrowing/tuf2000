@@ -10,11 +10,11 @@ namespace tuf2000 {
 // hardware or mocking - the driver itself is just a thin eModbus-facing wrapper around this.
 
 // The meter sends every 32-bit value low word first: reg0 (the lower-numbered register) is the low
-// 16 bits, reg1 the high 16 bits - the manual's "lower byte first" note, confirmed at bench bring-up
-// (a high-word-first decode turned the fluid sound speed into an exact integer, its low mantissa
-// word replaced by the next register's zero).
-// True unless value is NaN or +/-infinity. Checked on the IEEE-754 bit pattern (all-ones exponent)
-// rather than via std::isfinite, so it stays correct even under -ffast-math.
+// 16 bits, reg1 the high 16 bits - the manual's "lower byte first" note, confirmed at bench
+// bring-up (a high-word-first decode turned the fluid sound speed into an exact integer, its low
+// mantissa word replaced by the next register's zero). True unless value is NaN or +/-infinity.
+// Checked on the IEEE-754 bit pattern (all-ones exponent) rather than via std::isfinite, so it
+// stays correct even under -ffast-math.
 bool isFiniteFloat(float value);
 
 // REAL4: reinterprets the assembled 32 bits as an IEEE-754 float. Returns false - leaving out
@@ -46,8 +46,8 @@ bool replyLengthMatches(size_t messageSize, uint8_t byteCount, uint16_t wordsReq
 // decrease is accepted - a totalizer reset on the meter is legitimate - and consumers already only
 // count positive deltas. The very first reading has nothing to compare against and is accepted.
 // A rejected reading does not move the baseline, so a later plausible one is judged against the
-// last good value; consequently a genuine jump above maxJumpM3 (e.g. more than that flowed while the
-// bus was down) keeps being rejected until the firmware restarts and re-baselines.
+// last good value; consequently a genuine jump above maxJumpM3 (e.g. more than that flowed while
+// the bus was down) keeps being rejected until the firmware restarts and re-baselines.
 class TotalizerJumpGuard {
 public:
     explicit TotalizerJumpGuard(float maxJumpM3) : maxJumpM3_(maxJumpM3) {}
@@ -73,8 +73,8 @@ inline uint8_t signalAutogainStep(uint16_t reg) { return static_cast<uint8_t>(re
 class Tuf2000PollTracker {
 public:
     // kSignalQuality covers the whole signal block (quality + upstream/downstream strength words).
-    // The token's field slot is kFieldBits wide, so 4 fields is the hard ceiling - a fifth one needs
-    // a wider slot (bump kFieldBits), which shifts pollSeq accordingly.
+    // The token's field slot is kFieldBits wide, so 4 fields is the hard ceiling - a fifth one
+    // needs a wider slot (bump kFieldBits), which shifts pollSeq accordingly.
     enum Field : uint32_t { kFlowRate = 0, kTotalizer = 1, kSignalQuality = 2, kSoundSpeed = 3 };
     static constexpr uint8_t kFieldCount = 4;
     static constexpr uint32_t kFieldBits = 2;
@@ -83,9 +83,7 @@ public:
     // How many 16-bit registers each field's request asks for - the single source for both the
     // request the driver sends and the reply-length check on what comes back. Every REAL4 is 2
     // words; the signal block is quality + upstream strength + downstream strength.
-    static constexpr uint16_t wordCountOf(Field field) {
-        return field == kSignalQuality ? 3 : 2;
-    }
+    static constexpr uint16_t wordCountOf(Field field) { return field == kSignalQuality ? 3 : 2; }
 
     // Starts a new poll: bumps the poll sequence number and resets pending/failed state. Returns
     // the sequence number the caller should pass to makeToken() for each of this poll's requests.

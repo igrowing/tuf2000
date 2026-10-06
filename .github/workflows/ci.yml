@@ -17,8 +17,9 @@ jobs:
         with:
           path: ~/.platformio
           key: pio-native-${{ hashFiles('platformio.ini') }}
-      - run: pip install platformio
-      - run: pio test -e native
+      - run: pip install platformio clang-format
+      - name: Unit tests (includes the clang-format check)
+        run: pio test -e native
 
   build-example:
     runs-on: ubuntu-latest
@@ -41,3 +42,17 @@ jobs:
           --project-option="platform=https://github.com/pioarduino/platform-espressif32/releases/download/stable/platform-espressif32.zip"
           --project-option="framework=arduino"
           --project-option="lib_deps=https://github.com/eModbus/eModbus.git#v1.7.4.stable"
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-esp32-${{ hashFiles('platformio.ini', 'library.json') }}
+      - run: pip install platformio
+      - run: pio check -e esp32dev

@@ -29,9 +29,9 @@ namespace tuf2000 {
 //
 // eModbus's ModbusClientRTU is async-only by design: it runs its own FreeRTOS worker task and
 // queues/serializes requests internally, delivering results via onDataHandler/onErrorHandler
-// callbacks rather than a blocking call, so this driver needs no FreeRTOS task of its own. This driver exposes that async engine
-// (readAsync/responseReady/takeReading) plus a thin blocking convenience (read()) built on top of
-// it, rather than two separate implementations.
+// callbacks rather than a blocking call, so this driver needs no FreeRTOS task of its own. This
+// driver exposes that async engine (readAsync/responseReady/takeReading) plus a thin blocking
+// convenience (read()) built on top of it, rather than two separate implementations.
 class Tuf2000FlowMeter {
 public:
     struct Config {
@@ -62,14 +62,14 @@ public:
         // values); corrects a meter whose calibration is off.
         float calibrationMultiplier = 1.0f;
         // Largest forward move of totalizerM3 (calibrated) accepted between two polls - see
-        // domain::TotalizerJumpGuard. A poll exceeding it is rejected like a Modbus failure.
+        // TotalizerJumpGuard. A poll exceeding it is rejected like a Modbus failure.
         float maxTotalizerJumpM3 = 10.0f;
     };
 
     struct Reading {
         float flowRateM3h = 0.0f;
         float totalizerM3 = 0.0f;
-        // Raw quality word: domain::signalQualityValue()/signalAutogainStep() split it.
+        // Raw quality word: signalQualityValue()/signalAutogainStep() split it.
         uint16_t signalQuality = 0;
         uint16_t signalStrengthUp = 0;
         uint16_t signalStrengthDown = 0;
@@ -136,17 +136,17 @@ private:
         }
     }
     void recordError(Modbus::Error error);
-    void issueRequest(uint32_t pollSeq,
-                       tuf2000::Tuf2000PollTracker::Field field,
-                       uint16_t startRegister);
-    void handleData(ModbusMessage msg, uint32_t token);
+    void issueRequest(uint32_t pollSeq, tuf2000::Tuf2000PollTracker::Field field,
+                      uint16_t startRegister);
+    void handleData(ModbusMessage& msg, uint32_t token);
     void handleError(Modbus::Error error, uint32_t token);
     // Common "one field of the current poll is done" bookkeeping shared by handleData()/
     // handleError(): delegates to pollTracker_ and, once every field has reported in, publishes
     // scratch_ to resultQueue_. Runs on eModbus's worker task.
     void finishField(uint32_t token, bool ok);
     // Reports one field of the current poll as failed for `failure` (a stale token's failure
-    // belongs to no current poll and is not remembered), then completes that field via finishField().
+    // belongs to no current poll and is not remembered), then completes that field via
+    // finishField().
     void failField(uint32_t token, tuf2000::Tuf2000Failure failure);
     // Keeps only the FIRST failure reason of the poll being built (and mirrors it into the sticky
     // lastFailure_): later ones are usually knock-on effects of the first.

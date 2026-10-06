@@ -42,7 +42,7 @@ static uint16_t startRegisterOf(Tuf2000PollTracker::Field field) {
 static bool readField(Tuf2000PollTracker::Field field, const char* name, uint16_t* words) {
     const uint16_t count = Tuf2000PollTracker::wordCountOf(field);
     ModbusMessage reply = client.syncRequest(static_cast<uint32_t>(field), kSlaveId,
-                                                   READ_HOLD_REGISTER, startRegisterOf(field), count);
+                                             READ_HOLD_REGISTER, startRegisterOf(field), count);
     const Modbus::Error error = reply.getError();
 
     char what[48];
@@ -80,7 +80,8 @@ static bool readFloat(Tuf2000PollTracker::Field field, const char* name, float& 
     if (!tuf2000::decodeFloatLowWordFirst(words[0], words[1], out)) {
         char what[48];
         snprintf(what, sizeof(what), "%s: finite number", name);
-        fail(what, "NaN/infinity: wrong register map for this firmware. Try examples/register_dump.");
+        fail(what,
+             "NaN/infinity: wrong register map for this firmware. Try examples/register_dump.");
         return false;
     }
     return true;

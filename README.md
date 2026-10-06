@@ -62,6 +62,49 @@ Readings resume on the next poll after the cable is reconnected.
 
 > Generally in MCUs it's better to use asynchronous calls. On one hand it is harder to debug and harder to understand the code. On the other hand, it adds robustness and leverages the capabilities of your MCU. Make your game!
 
+### API
+
+Everything is in `namespace tuf2000`; `#include <Tuf2000.h>` pulls in the whole library. Install with `lib_deps = igrowing/tuf2000` (PlatformIO) once published; the library needs eModbus.
+
+`Tuf2000FlowMeter` (the driver; takes a `HardwareSerial&` because eModbus requires one):
+
+| Member | Purpose |
+|--|--|
+| `bool begin(HardwareSerial& serial, const Config& cfg)` | Starts the UART and the Modbus client. Call once from `setup()`. Returns `false` if the config is unusable (pins unset, zero poll interval). |
+| `void setLogger(void (*)(const char*))` | Optional log callback, set before `begin()`. May be called from eModbus's worker task, so keep it short. |
+| `void readAsync(uint32_t nowMs)` | Non-blocking. Starts a poll when one is due; does nothing while one is in flight. Call every `loop()`. |
+| `bool responseReady() const` | A new `Reading` (valid or not) has arrived since the last `takeReading()`. |
+| `bool takeReading(Reading& out)` | Copies the latest `Reading` out and clears `responseReady()`. |
+| `bool read(uint32_t timeoutMs, Reading& out)` | Blocking convenience for bench sketches. Never call it from `loop()` of real firmware. |
+| `uint8_t lastErrorCode()`, `const char* lastErrorText()` | Last eModbus error. Sticky: a good poll does not clear it. |
+| `Tuf2000Failure lastFailure()` | Why the last failed poll was rejected. Sticky. |
+
+`Config` (defaults in brackets):
+
+| Field | Meaning |
+|--|--|
+| `rxPin`, `txPin` | UART pins. No default (`-1`): you must set both. |
+| `dePin` [-1] | RS-485 direction pin, or `-1` for transceivers that switch automatically. |
+| `baudRate` [9600], `slaveId` [1] | Must match the meter (M62, M46). |
+| `flowRateRegister` [0], `soundSpeedRegister` [6], `signalQualityRegister` [91], `totalizerRegister` [114] | Protocol addresses (manual register number minus one). |
+| `pollIntervalMs` [5000] | Time between polls. |
+| `stuckRequestTimeoutMs` [8000] | A poll still in flight after this long is abandoned so the next can start. |
+| `calibrationMultiplier` [1.0] | Scales flow rate and totalizer. |
+| `maxTotalizerJumpM3` [10.0] | Largest forward totalizer step accepted between two polls. |
+
+`Reading`:
+
+| Field | Meaning |
+|--|--|
+| `valid`, `failure` | `valid == false` means the whole poll is untrustworthy; `failure` says why (`kNone` exactly when valid). |
+| `flowRateM3h`, `totalizerM3`, `soundSpeedMs` | Decoded values (flow rate and totalizer include `calibrationMultiplier`). |
+| `signalQuality`, `signalStrengthUp`, `signalStrengthDown` | Raw signal words. Split `signalQuality` with `signalQualityValue()` (0-99) and `signalAutogainStep()`. |
+| `timestampMs` | `millis()` when the poll started. |
+
+`Tuf2000Failure` is `kNone`, `kModbusError`, `kBadReplyLength`, `kNonFiniteValue` or `kTotalizerJump`; `tuf2000FailureText()` turns it into a short string such as `modbus_error_or_timeout`.
+
+The protocol layer (`Tuf2000Protocol.h`: `decodeFloatLowWordFirst()`, `replyLengthMatches()`, `TotalizerJumpGuard`, `Tuf2000PollTracker`) has no Arduino or eModbus dependency and is unit tested on the host.
+
 ### Behaviour worth knowing
 
 - A poll is **all or nothing**: a Modbus error, a wrong-length reply, a NaN/infinity value or an implausible totalizer jump makes the whole `Reading` invalid (`valid == false`, with the reason in `failure`). Nothing is clamped or defaulted.
@@ -98,14 +141,18 @@ This is the must to do part **BEFORE** connection the flow meter to MCU. The met
 2. Use provided with the meter silicon-like tighthening cream between the transducer and the pipe to make air-less tight placement.
 3. Using menu M90 move the transducers slightly around the calculated distance from M25 to read on the display Q value between 60 and 90. More is better. After every slight position change let the meter 3-5 seconds to show you the new Q value. When you reached best possible Q, tighten the transducers with provided rings.
 
-#### Diagnosing a silent bus
+## Debugging and troubleshooting
+
+### Diagnosing a silent bus
 Menu M49 on the meter displays the raw bytes it receives on the serial port. If bytes show up every couple of seconds, wiring and converter are fine and the fault is in M63/M62/M46. If M49 stays empty, look at the physical link (A/B, termination, converter). On the converter, the R LED blinks for each request coming from the ESP32 and the T LED blinks for each reply going back to it.
 
-#### Meter adjustment
+### Meter adjustment
 Meter might count water flow even on still water. And it may count the flow wrongly.
 
 1. To set 0 liquid flow, use menu M42. Activating it, wait 30 seconds: do not touch the meter and make 100% sure the water is NOT running.
 2. To calibrate the water flow measurement use menu M45. The scale factor is expected/actual.
+
+## Best practices
 
 ### RS-485 GPIOs
 
@@ -144,3 +191,10 @@ RS-485/Modbus is multi-drop: a shut-off valve controller or any other Modbus RTU
 ### Shut-off valve strategy
 
 Prefer the TUF-2000's own relay, configured locally (flow-rate or totalizer threshold), as the failsafe that closes a master shut-off valve even when the ESP32 or Wi-Fi is down: don't trust the network for safety-critical shut-off. Poll flow readings over Modbus in firmware as well, for reporting/logging and for application-aware logic the meter alone can't know (e.g. unusually high volume mid-cycle for whichever zone is currently running).
+
+
+## How to contribute
+
+* [Open an issue](https://github.com/igrowing/tuf2000/issues) if you found a bug or want a new feature.
+
+*  <a href="https://www.buymeacoffee.com/igrowing" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a> if the lib makes your life a bit simpler.

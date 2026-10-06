@@ -34,8 +34,8 @@ void loop() {
     if (meter.takeReading(r)) {
         if (r.valid) {
             Serial.printf("flow %.3f m3/h, total %.3f m3, quality %u, sound %.1f m/s\n",
-                          r.flowRateM3h, r.totalizerM3, tuf2000::signalQualityValue(r.signalQuality),
-                          r.soundSpeedMs);
+                          r.flowRateM3h, r.totalizerM3,
+                          tuf2000::signalQualityValue(r.signalQuality), r.soundSpeedMs);
         } else {
             Serial.printf("poll failed: %s\n", tuf2000::tuf2000FailureText(r.failure));
         }

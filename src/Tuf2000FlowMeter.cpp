@@ -32,8 +32,11 @@ bool Tuf2000FlowMeter::begin(HardwareSerial& serial, const Config& cfg) {
     } else {
         client_ = std::make_unique<ModbusClientRTU>(cfg.dePin);
     }
+    // The by-value parameter is the signature eModbus's handler type dictates.
+    // cppcheck-suppress passedByValue
     client_->onDataHandler([this](ModbusMessage msg, uint32_t token) { handleData(msg, token); });
-    client_->onErrorHandler([this](Modbus::Error error, uint32_t token) { handleError(error, token); });
+    client_->onErrorHandler(
+        [this](Modbus::Error error, uint32_t token) { handleError(error, token); });
     client_->begin(serial);
     return true;
 }
@@ -116,9 +119,8 @@ bool Tuf2000FlowMeter::read(uint32_t timeoutMs, Reading& out) {
     return false;
 }
 
-void Tuf2000FlowMeter::issueRequest(uint32_t pollSeq,
-                                      Tuf2000PollTracker::Field field,
-                                      uint16_t startRegister) {
+void Tuf2000FlowMeter::issueRequest(uint32_t pollSeq, Tuf2000PollTracker::Field field,
+                                    uint16_t startRegister) {
     const uint32_t token = Tuf2000PollTracker::makeToken(pollSeq, field);
     const Error rc = client_->addRequest(token, config_.slaveId, READ_HOLD_REGISTER, startRegister,
                                          Tuf2000PollTracker::wordCountOf(field));
@@ -157,7 +159,7 @@ bool Tuf2000FlowMeter::parseField(Tuf2000PollTracker::Field field, const ModbusM
         case Tuf2000PollTracker::kSignalQuality:
             idx = msg.get(idx, scratch_.signalQuality);
             idx = msg.get(idx, scratch_.signalStrengthUp);
-            idx = msg.get(idx, scratch_.signalStrengthDown);
+            msg.get(idx, scratch_.signalStrengthDown);
             return true;
         case Tuf2000PollTracker::kSoundSpeed:
             if (!takeFloat(msg, idx, value)) {
@@ -169,7 +171,7 @@ bool Tuf2000FlowMeter::parseField(Tuf2000PollTracker::Field field, const ModbusM
     return false;
 }
 
-void Tuf2000FlowMeter::handleData(ModbusMessage msg, uint32_t token) {
+void Tuf2000FlowMeter::handleData(ModbusMessage& msg, uint32_t token) {
     if (!pollTracker_.isCurrent(token)) {
         return;  // Reply to an already-abandoned poll: nothing to record (see the tracker).
     }
