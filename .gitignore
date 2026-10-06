@@ -1,0 +1,8 @@
+.pio/
+.vscode/
+.idea/
+.claude/
+*.elf
+
+# Third-party manual: link to it, never redistribute
+docs/*.pdf
