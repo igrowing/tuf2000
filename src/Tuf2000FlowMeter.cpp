@@ -130,7 +130,7 @@ void Tuf2000FlowMeter::issueRequest(uint32_t pollSeq, Tuf2000PollTracker::Field 
         // rather than hanging pollTracker_ forever waiting for a callback that will never fire.
         recordError(rc);
         char msg[64];
-        snprintf(msg, sizeof(msg), "tuf2000: enqueue failed: %s", lastErrorText());
+        formatEnqueueFailed(msg, sizeof(msg), lastErrorText());
         log(msg);
         failField(token, Tuf2000Failure::kModbusError);
     }
@@ -199,7 +199,7 @@ void Tuf2000FlowMeter::noteFailure(Tuf2000Failure failure) {
         pollFailure_ = failure;
         lastFailure_ = static_cast<uint8_t>(failure);
         char msg[64];
-        snprintf(msg, sizeof(msg), "tuf2000: poll rejected: %s", tuf2000FailureText(failure));
+        formatPollRejected(msg, sizeof(msg), failure);
         log(msg);
     }
 }

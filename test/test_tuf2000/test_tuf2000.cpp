@@ -1,5 +1,7 @@
 #include <unity.h>
 
+#include <string.h>
+
 #include "Tuf2000Protocol.h"
 
 using namespace tuf2000;
@@ -268,8 +270,46 @@ void test_signal_quality_register_splits_into_quality_and_autogain_step() {
     TEST_ASSERT_EQUAL_UINT8(255, tuf2000::signalAutogainStep(0xFF00));
 }
 
+// --- Log message formatting --------------------------------------------------------------------
+
+void test_format_enqueue_failed_includes_the_modbus_error_text() {
+    char msg[64];
+    formatEnqueueFailed(msg, sizeof(msg), "Queue full");
+    TEST_ASSERT_EQUAL_STRING("tuf2000: enqueue failed: Queue full", msg);
+}
+
+void test_format_poll_rejected_names_every_failure_reason() {
+    char msg[64];
+    formatPollRejected(msg, sizeof(msg), Tuf2000Failure::kModbusError);
+    TEST_ASSERT_EQUAL_STRING("tuf2000: poll rejected: modbus_error_or_timeout", msg);
+    formatPollRejected(msg, sizeof(msg), Tuf2000Failure::kBadReplyLength);
+    TEST_ASSERT_EQUAL_STRING("tuf2000: poll rejected: bad_reply_length", msg);
+    formatPollRejected(msg, sizeof(msg), Tuf2000Failure::kNonFiniteValue);
+    TEST_ASSERT_EQUAL_STRING("tuf2000: poll rejected: non_finite_value", msg);
+    formatPollRejected(msg, sizeof(msg), Tuf2000Failure::kTotalizerJump);
+    TEST_ASSERT_EQUAL_STRING("tuf2000: poll rejected: totalizer_jump_too_large", msg);
+}
+
+void test_format_truncates_to_a_terminated_message_that_fits_the_buffer() {
+    char longText[200];
+    memset(longText, 'x', sizeof(longText) - 1);
+    longText[sizeof(longText) - 1] = '\0';
+
+    char msg[64];
+    formatEnqueueFailed(msg, sizeof(msg), longText);
+    TEST_ASSERT_EQUAL_UINT(63, strlen(msg));  // 64-byte buffer minus the terminator.
+    TEST_ASSERT_EQUAL_STRING_LEN("tuf2000: enqueue failed: xxx", msg, 28);
+
+    char tiny[8];
+    formatPollRejected(tiny, sizeof(tiny), Tuf2000Failure::kModbusError);
+    TEST_ASSERT_EQUAL_STRING("tuf2000", tiny);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_format_enqueue_failed_includes_the_modbus_error_text);
+    RUN_TEST(test_format_poll_rejected_names_every_failure_reason);
+    RUN_TEST(test_format_truncates_to_a_terminated_message_that_fits_the_buffer);
     RUN_TEST(test_decode_float_low_word_first_takes_first_register_as_low_word);
     RUN_TEST(test_decode_float_rejects_nan_and_infinity_and_leaves_out_untouched);
     RUN_TEST(test_is_finite_float_matches_the_ieee_754_classes);

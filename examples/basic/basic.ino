@@ -4,6 +4,9 @@
 
 tuf2000::Tuf2000FlowMeter meter;
 
+// Optional: the library reports failures and start-up errors through this callback.
+static void logLine(const char* message) { Serial.println(message); }
+
 void setup() {
     Serial.begin(115200);
 
@@ -12,6 +15,7 @@ void setup() {
     cfg.txPin = 16;   // ESP32 TX -> converter RXD
     cfg.slaveId = 1;  // must equal the meter's M46
 
+    meter.setLogger(logLine);  // before begin()
     if (!meter.begin(Serial2, cfg)) {
         Serial.println("meter.begin() failed");
     }

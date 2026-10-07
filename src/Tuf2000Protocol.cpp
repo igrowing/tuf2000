@@ -1,5 +1,6 @@
 #include "Tuf2000Protocol.h"
 
+#include <stdio.h>
 #include <string.h>
 
 namespace tuf2000 {
@@ -35,6 +36,14 @@ const char* tuf2000FailureText(Tuf2000Failure failure) {
             return "totalizer_jump_too_large";
     }
     return "unknown";
+}
+
+void formatEnqueueFailed(char* buf, size_t size, const char* modbusErrorText) {
+    snprintf(buf, size, "tuf2000: enqueue failed: %s", modbusErrorText);
+}
+
+void formatPollRejected(char* buf, size_t size, Tuf2000Failure failure) {
+    snprintf(buf, size, "tuf2000: poll rejected: %s", tuf2000FailureText(failure));
 }
 
 bool replyLengthMatches(size_t messageSize, uint8_t byteCount, uint16_t wordsRequested) {

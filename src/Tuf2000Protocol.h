@@ -35,6 +35,11 @@ enum class Tuf2000Failure : uint8_t {
 // Static, never-null text for logs, the cmd/meter reply and the /alert reason.
 const char* tuf2000FailureText(Tuf2000Failure failure);
 
+// Format the driver's log lines into buf (NUL-terminated, truncated to size). Kept here, apart from
+// the driver, so the message text can be unit tested on the host.
+void formatEnqueueFailed(char* buf, size_t size, const char* modbusErrorText);
+void formatPollRejected(char* buf, size_t size, Tuf2000Failure failure);
+
 // A function-3 reply is [0]=server ID, [1]=function code, [2]=byte count, then the register data
 // (the CRC is already stripped by eModbus). True only if the byte count is exactly two per word
 // requested AND the message really is that long - a truncated reply otherwise reads back as zeros.

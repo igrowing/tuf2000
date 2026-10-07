@@ -15,6 +15,9 @@ Install the library (`lib_deps = igrowing/tuf2000`), include `<Tuf2000.h>` and r
 
 tuf2000::Tuf2000FlowMeter meter;
 
+// Optional: the library reports failures and start-up errors through this callback.
+static void logLine(const char* message) { Serial.println(message); }
+
 void setup() {
     Serial.begin(115200);
 
@@ -23,6 +26,7 @@ void setup() {
     cfg.txPin = 16;   // ESP32 TX -> converter RXD
     cfg.slaveId = 1;  // must equal the meter's M46
 
+    meter.setLogger(logLine);  // before begin()
     if (!meter.begin(Serial2, cfg)) {
         Serial.println("meter.begin() failed");
     }
@@ -51,8 +55,11 @@ flow 0.412 m3/h, total 2.681 m3
 With the RS-485 cable unplugged each poll is rejected:
 
 ```
+tuf2000: poll rejected: modbus_error_or_timeout
 poll failed: modbus_error_or_timeout
 ```
+
+The first line comes from the library's log callback, the second from the sketch itself.
 
 Readings resume on the next poll after the cable is reconnected.
 
@@ -112,6 +119,18 @@ The protocol layer (`Tuf2000Protocol.h`: `decodeFloatLowWordFirst()`, `replyLeng
 - Modbus protocol addresses are the manual's register numbers minus one. Defaults in `Config`: flow rate REG1-2, sound speed REG7-8, signal quality/up/down strength REG92-94, positive totalizer (m3) REG115-116. Override them in `Config` for other firmware variants.
 - `calibrationMultiplier` scales flow rate and totalizer if your meter's calibration is off. `maxTotalizerJumpM3` (default 10) is the largest forward step accepted between polls.
 - `lastErrorCode()`/`lastFailure()` are sticky, so an intermittent fault stays visible after a good poll.
+
+### Log messages
+
+With a callback set via `setLogger()` the library passes it one short, NUL-terminated line per event (at most 63 characters, longer text is truncated). Without a callback it logs nothing.
+
+| Message | When |
+|--|--|
+| `tuf2000: invalid config (rx/tx pin unset or zero poll interval)` | `begin()` rejected the `Config` and returned `false`. |
+| `tuf2000: enqueue failed: <eModbus error text>` | A request could not even be queued. The poll fails with `kModbusError`. |
+| `tuf2000: poll rejected: <reason>` | A poll was rejected. `<reason>` is `tuf2000FailureText()` of the first failure: `modbus_error_or_timeout`, `bad_reply_length`, `non_finite_value` or `totalizer_jump_too_large`. |
+
+Successful polls are not logged: read `Reading::valid` for those. The text is only valid during the call, so copy it if you need to keep it.
 
 ## Flow meter installing and configuration
 
